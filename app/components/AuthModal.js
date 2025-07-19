@@ -1,8 +1,12 @@
 "use client"
 
 import { useState } from "react"
+import httpRequest from "@/lib/axiosInstance"
+import { useRouter } from "next/navigation"
+import { toast } from "react-toastify"
 
 export default function AuthModal({ mode, onClose, onLogin, onSwitchMode }) {
+  const router = useRouter()
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -12,7 +16,7 @@ export default function AuthModal({ mode, onClose, onLogin, onSwitchMode }) {
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault()
     setError("")
     setLoading(true)
@@ -31,41 +35,44 @@ export default function AuthModal({ mode, onClose, onLogin, onSwitchMode }) {
           setError("Name is required")
           return
         }
+        httpRequest.post('/users/register', formData, { withCredentials: true })
+        .then((res)=>{
+          if(res.data.success){
+            toast.success(res.data.message)
+            onClose()
+          }
+        })
+        .catch((err) => {
+          if (err.response?.data?.message) {
+            toast.error(err.response.data.message);
+          } else {
+            toast.error("Something went wrong");
+          }
+        })
+        .finally(() => {
+          setLoading(false)
+          
+        });
       }
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
-      // Simulate authentication
-      const userData = {
-        id: Date.now(),
-        name: formData.name || formData.email.split("@")[0],
-        email: formData.email,
-        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(formData.name || formData.email)}&background=3b82f6&color=fff`,
-        createdAt: new Date().toISOString(),
+      //login
+      if (mode === "login") {
+        httpRequest.post('/login', formData)
+          .then((res) => {
+            if (res.data.success) {
+              onClose();
+              onLogin()
+            } else {
+              toast.error("Login failed");
+            }
+          })
+          .catch((err) => {
+            toast.error(err?.response?.data?.message || "Something went wrong");
+          })
+          .finally(() => {
+            setLoading(false);
+          });
       }
-
-      // Save to localStorage (in real app, this would be handled by backend)
-      const users = JSON.parse(localStorage.getItem("users") || "[]")
-      if (mode === "signup") {
-        // Check if user already exists
-        const existingUser = users.find((u) => u.email === formData.email)
-        if (existingUser) {
-          setError("User with this email already exists")
-          return
-        }
-        users.push({ ...userData, password: formData.password })
-        localStorage.setItem("users", JSON.stringify(users))
-      } else {
-        // Login validation
-        const existingUser = users.find((u) => u.email === formData.email && u.password === formData.password)
-        if (!existingUser) {
-          setError("Invalid email or password")
-          return
-        }
-      }
-
-      onLogin(userData)
     } catch (error) {
       setError("An error occurred. Please try again.")
     } finally {
@@ -78,10 +85,8 @@ export default function AuthModal({ mode, onClose, onLogin, onSwitchMode }) {
       <div className="bg-white rounded-lg p-8 max-w-md w-full shadow-2xl">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold">{mode === "login" ? "Sign In" : "Create Account"}</h2>
-          <button
-            onClick={onClose}
+          <button onClick={onClose} disabled={loading}
             className="text-gray-500 hover:text-gray-700 text-2xl transition-colors"
-            disabled={loading}
           >
             ×
           </button>
@@ -91,53 +96,33 @@ export default function AuthModal({ mode, onClose, onLogin, onSwitchMode }) {
           {mode === "signup" && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
-              <input
-                type="text"
-                required
-                className="input-field"
-                value={formData.name}
+              <input type="text" required className="input-field" value={formData.name} disabled={loading}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                disabled={loading}
               />
             </div>
           )}
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
-            <input
-              type="email"
-              required
-              className="input-field"
-              value={formData.email}
+            <input type="email" required className="input-field" value={formData.email} disabled={loading}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              disabled={loading}
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Password *</label>
-            <input
-              type="password"
-              required
-              className="input-field"
-              value={formData.password}
+            <input type="password" required className="input-field" value={formData.password} disabled={loading}
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              disabled={loading}
             />
           </div>
 
           {mode === "signup" && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password *</label>
-              <input
-                type="password"
-                required
-                className="input-field"
-                value={formData.confirmPassword}
-                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                disabled={loading}
-              />
-            </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password *</label>
+                <input type="password" required className="input-field" value={formData.confirmPassword} disabled={loading}
+                  onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                />
+              </div>
           )}
 
           {error && (

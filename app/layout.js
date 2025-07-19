@@ -1,3 +1,5 @@
+import ToastProvider from "@/components/ToastProvider"
+import { AuthProvider } from "./components/context/AuthContext"
 import "./globals.css"
 
 export const metadata = {
@@ -17,7 +19,12 @@ export default function RootLayout({ children }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.png" type="image/svg+xml" />
       </head>
-      <body className="bg-gray-50 min-h-screen antialiased">{children}</body>
+      <body className="bg-gray-50 min-h-screen antialiased">
+        <AuthProvider>
+          <ToastProvider />
+          {children}
+        </AuthProvider>
+      </body>
     </html>
   )
 }

@@ -1,47 +1,31 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, startTransition } from "react"
 import AuthModal from "./components/AuthModal"
-import Dashboard from "./components/Dashboard"
+// import Dashboard from "./components/Dashboard"
 import LoadingSpinner from "./components/LoadingSpinner"
+import { useRouter } from "next/navigation"
 
 export default function Home() {
-  const [user, setUser] = useState(null)
+  const router = useRouter()
+
   const [showAuth, setShowAuth] = useState(false)
   const [authMode, setAuthMode] = useState("login")
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Check if user is logged in
-    try {
-      const savedUser = localStorage.getItem("currentUser")
-      if (savedUser) {
-        setUser(JSON.parse(savedUser))
-      }
-    } catch (error) {
-      console.error("Error loading user data:", error)
-      localStorage.removeItem("currentUser")
-    }
     setLoading(false)
   }, [])
 
-  const handleLogin = (userData) => {
-    setUser(userData)
-    localStorage.setItem("currentUser", JSON.stringify(userData))
+  const handleLogin = () => {
     setShowAuth(false)
-  }
-
-  const handleLogout = () => {
-    setUser(null)
-    localStorage.removeItem("currentUser")
+    setTimeout(() => {
+      window.location.href = "/tasks";
+    }, 100)
   }
 
   if (loading) {
     return <LoadingSpinner />
-  }
-
-  if (user) {
-    return <Dashboard user={user} onLogout={handleLogout} />
   }
 
   return (
@@ -54,12 +38,11 @@ export default function Home() {
           <h1 className="text-5xl md:text-6xl font-bold mb-6">
             TASK TRACKING PLATFORM
             <br />
-            <span className="text-3xl md:text-4xl font-normal">FOR TEAMS & PROJECTS</span>
+            <span className="text-3xl md:text-4xl font-normal">One place for every task, every team.</span>
           </h1>
 
           <p className="text-xl md:text-2xl mb-8 max-w-2xl mx-auto leading-relaxed">
-            Streamlined task management, flexible collaboration, and efficient project tracking. Enhanced productivity
-            and seamless teamwork for modern organizations.
+            Simplify your workflow and never miss a deadline—your ultimate task tracking companion
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -84,35 +67,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Contact Form */}
-        <div className="absolute right-8 top-1/2 transform -translate-y-1/2 bg-red-600 p-6 rounded-lg text-white max-w-sm hidden lg:block shadow-2xl">
-          <h3 className="text-xl font-bold mb-4">Get started today, or contact us for a demo</h3>
-          <div className="space-y-4">
-            <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder="Contact Person"
-                className="flex-1 px-3 py-2 text-black rounded focus:outline-none focus:ring-2 focus:ring-red-300"
-              />
-              <input
-                type="tel"
-                placeholder="Phone"
-                className="flex-1 px-3 py-2 text-black rounded focus:outline-none focus:ring-2 focus:ring-red-300"
-              />
-            </div>
-            <input
-              type="email"
-              placeholder="E-mail"
-              className="w-full px-3 py-2 text-black rounded focus:outline-none focus:ring-2 focus:ring-red-300"
-            />
-            <button className="w-full bg-red-700 hover:bg-red-800 py-2 rounded font-medium transition-colors">
-              Contact us
-            </button>
-            <p className="text-xs opacity-90">
-              By clicking submit, you accept our terms and privacy policy regarding the collection and use of your data.
-            </p>
-          </div>
-        </div>
+
       </div>
 
       {showAuth && (

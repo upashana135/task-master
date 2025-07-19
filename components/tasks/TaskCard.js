@@ -1,6 +1,8 @@
 "use client"
 
+import httpRequest from "@/lib/axiosInstance"
 import { useState } from "react"
+import { toast } from "react-toastify"
 
 export default function TaskCard({ task, currentUser, onUpdate, onDelete }) {
   const [showComments, setShowComments] = useState(false)
@@ -10,23 +12,26 @@ export default function TaskCard({ task, currentUser, onUpdate, onDelete }) {
   const toggleComplete = () => {
     onUpdate(task.id, {
       status: task.status === "completed" ? "open" : "completed",
-      completedAt: task.status === "completed" ? null : new Date().toISOString(),
+      completed_date: task.status === "completed" ? null : new Date().toISOString(),
     })
   }
 
-  const addComment = () => {
+  const addComment = (taskId) => {
     if (newComment.trim()) {
       const comment = {
-        id: Date.now(),
-        text: newComment,
-        author: currentUser.name,
-        authorId: currentUser.id,
-        createdAt: new Date().toISOString(),
+        commentText: newComment,
+        commentDate: new Date().toISOString(),
       }
-      onUpdate(task.id, {
-        comments: [...task.comments, comment],
-      })
-      setNewComment("")
+      httpRequest.post(`/tasks/comments/${taskId}`, comment)
+        .then((res)=>{
+          if(res.data.success) {
+            toast.success(res.data.message)
+            setNewComment("")
+          }
+        })
+      // onUpdate(task.id, {
+      //   comments: [...task.comments, comment],
+      // })
     }
   }
 
@@ -34,20 +39,7 @@ export default function TaskCard({ task, currentUser, onUpdate, onDelete }) {
     return new Date(dateString).toLocaleDateString()
   }
 
-  const isOverdue = new Date(task.dueDate) < new Date() && task.status !== "completed"
-
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case "high":
-        return "bg-red-100 text-red-800"
-      case "medium":
-        return "bg-yellow-100 text-yellow-800"
-      case "low":
-        return "bg-green-100 text-green-800"
-      default:
-        return "bg-gray-100 text-gray-800"
-    }
-  }
+  const isOverdue = new Date(task.due_date) < new Date() && task.status !== "completed"
 
   return (
     <div
@@ -57,20 +49,19 @@ export default function TaskCard({ task, currentUser, onUpdate, onDelete }) {
         <h3 className="font-semibold text-lg text-gray-900 flex-1">{task.title}</h3>
         <div className="flex gap-2 ml-2">
           <span className={`status-badge ${task.status === "completed" ? "status-completed" : "status-open"}`}>
-            {task.status === "completed" ? "Completed" : "Open"}
+            {task.status === "open" ? "Open" : "Completed"}
           </span>
-          {task.priority && <span className={`status-badge ${getPriorityColor(task.priority)}`}>{task.priority}</span>}
         </div>
       </div>
 
       <p className="text-gray-600 mb-3 line-clamp-2">{task.description}</p>
 
       <div className="text-sm text-gray-500 mb-3 space-y-1">
+        <p>Start Date: {formatDate(task.start_date)}</p>
         <p className={isOverdue ? "text-red-600 font-medium" : ""}>
-          Due: {formatDate(task.dueDate)} {isOverdue && "(Overdue)"}
+          Due Date: {formatDate(task.due_date)} {isOverdue && "(Overdue)"}
         </p>
         {task.assignedTo && <p>Assigned to: {task.assignedTo}</p>}
-        <p>Created: {formatDate(task.createdAt)}</p>
       </div>
 
       <div className="flex justify-between items-center mb-3">
@@ -78,7 +69,7 @@ export default function TaskCard({ task, currentUser, onUpdate, onDelete }) {
           onClick={() => setShowComments(!showComments)}
           className="text-blue-600 hover:text-blue-800 text-sm transition-colors"
         >
-          💬 Comments ({task.comments.length})
+          💬 Comments ({task.taskComments.length})
         </button>
 
         <div className="flex gap-2">
@@ -105,36 +96,34 @@ export default function TaskCard({ task, currentUser, onUpdate, onDelete }) {
       {showComments && (
         <div className="border-t pt-4">
           <div className="space-y-3 mb-3 max-h-32 overflow-y-auto">
-            {task.comments.length === 0 ? (
+            {task.taskComments.length === 0 ? (
               <p className="text-gray-500 text-sm">No comments yet</p>
             ) : (
-              task.comments.map((comment) => (
+              task.taskComments.map((comment) => (
                 <div key={comment.id} className="text-sm bg-gray-50 p-3 rounded">
                   <div className="flex justify-between items-start mb-1">
-                    <span className="font-medium text-gray-900">{comment.author}</span>
-                    <span className="text-xs text-gray-500">{formatDate(comment.createdAt)}</span>
+                    <span className="font-medium text-gray-900">{comment.commenter_email}</span>
+                    <span className="text-xs text-gray-500">{formatDate(comment.comment_date)}</span>
                   </div>
-                  <p className="text-gray-700">{comment.text}</p>
+                  <p className="text-gray-700">{comment.comment_text}</p>
                 </div>
               ))
             )}
           </div>
-
-          <div className="flex gap-2">
+        </div>
+      )}
+      <div className="flex gap-2">
             <input
               type="text"
               placeholder="Add a comment..."
               className="input-field flex-1 text-sm"
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && addComment()}
             />
-            <button onClick={addComment} className="btn-primary text-sm px-3 py-1" disabled={!newComment.trim()}>
+            <button onClick={() => addComment(task.id)} className="btn-primary text-sm px-3 py-1" disabled={!newComment.trim()}>
               Add
             </button>
           </div>
-        </div>
-      )}
 
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -147,8 +136,7 @@ export default function TaskCard({ task, currentUser, onUpdate, onDelete }) {
               <button onClick={() => setShowDeleteConfirm(false)} className="btn-secondary flex-1">
                 Cancel
               </button>
-              <button
-                onClick={() => {
+              <button onClick={() => {
                   onDelete(task.id)
                   setShowDeleteConfirm(false)
                 }}

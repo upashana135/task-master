@@ -1,12 +1,12 @@
 "use client"
 
 import { useState } from "react"
-import TaskCard from "./TaskCard"
+import TaskCard from "../../components/tasks/TaskCard"
 
 export default function TaskList({ tasks, currentUser, onUpdateTask, onDeleteTask }) {
   const [filter, setFilter] = useState("all")
   const [searchTerm, setSearchTerm] = useState("")
-  const [sortBy, setSortBy] = useState("createdAt")
+  const [sortBy, setSortBy] = useState("start_date")
 
   const filteredTasks = tasks
     .filter((task) => {
@@ -18,15 +18,15 @@ export default function TaskList({ tasks, currentUser, onUpdateTask, onDeleteTas
     })
     .sort((a, b) => {
       switch (sortBy) {
-        case "dueDate":
-          return new Date(a.dueDate) - new Date(b.dueDate)
+        case "due_date":
+          return new Date(a.due_date) - new Date(b.due_date)
         case "priority":
           const priorityOrder = { high: 3, medium: 2, low: 1 }
           return priorityOrder[b.priority] - priorityOrder[a.priority]
         case "title":
           return a.title.localeCompare(b.title)
         default:
-          return new Date(b.createdAt) - new Date(a.createdAt)
+          return new Date(b.start_date) - new Date(a.start_date)
       }
     })
 
@@ -34,7 +34,7 @@ export default function TaskList({ tasks, currentUser, onUpdateTask, onDeleteTas
     total: tasks.length,
     open: tasks.filter((t) => t.status === "open").length,
     completed: tasks.filter((t) => t.status === "completed").length,
-    overdue: tasks.filter((t) => new Date(t.dueDate) < new Date() && t.status !== "completed").length,
+    overdue: tasks.filter((t) => new Date(t.due_date) < new Date() && t.status !== "completed").length,
   }
 
   return (
@@ -62,24 +62,21 @@ export default function TaskList({ tasks, currentUser, onUpdateTask, onDeleteTas
       {/* Filters and Search */}
       <div className="mb-6 flex flex-col lg:flex-row gap-4">
         <div className="flex gap-2">
-          <button
-            onClick={() => setFilter("all")}
+          <button onClick={() => setFilter("all")}
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${
               filter === "all" ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"
             }`}
           >
             All ({taskStats.total})
           </button>
-          <button
-            onClick={() => setFilter("open")}
+          <button onClick={() => setFilter("open")}
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${
               filter === "open" ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"
             }`}
           >
             Open ({taskStats.open})
           </button>
-          <button
-            onClick={() => setFilter("completed")}
+          <button onClick={() => setFilter("completed")}
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${
               filter === "completed" ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"
             }`}
@@ -98,8 +95,8 @@ export default function TaskList({ tasks, currentUser, onUpdateTask, onDeleteTas
           />
 
           <select className="input-field w-auto" value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-            <option value="createdAt">Sort by Created</option>
-            <option value="dueDate">Sort by Due Date</option>
+            <option value="start_date">Sort by Start Date</option>
+            <option value="due_date">Sort by Due Date</option>
             <option value="priority">Sort by Priority</option>
             <option value="title">Sort by Title</option>
           </select>
