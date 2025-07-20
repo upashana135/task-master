@@ -1,4 +1,4 @@
-# TaskTracker - Team Task Management Platform
+# Task-Master - Team Task Management Platform
 
 A comprehensive task tracking platform built with Next.js, React, and Tailwind CSS.
 
@@ -17,15 +17,13 @@ A comprehensive task tracking platform built with Next.js, React, and Tailwind C
 - ✅ Filter tasks by status (all, open, completed)
 - ✅ Search tasks by title or description
 - ✅ Delete tasks with confirmation
-- ✅ Task priority levels (high, medium, low)
 - ✅ Overdue task indicators
 
 ### Collaboration Features
 - ✅ Add comments to tasks
-- ✅ Team/project creation and management
+- ✅ Team creation and management
+- ✅ Project creation and management
 - ✅ Invite team members via email
-- ✅ Real-time notifications for task updates
-- ✅ Task assignment notifications
 
 ### User Interface
 - ✅ Responsive design for all screen sizes
@@ -38,38 +36,21 @@ A comprehensive task tracking platform built with Next.js, React, and Tailwind C
 
 ### Prerequisites
 - Node.js 18+ 
-- npm or yarn
+- npm
 
 ### Installation
 
 1. Clone the repository:
-\`\`\`bash
 git clone <repository-url>
 cd task-tracker-platform
-\`\`\`
 
 2. Install dependencies:
-\`\`\`bash
 npm install
-# or
-yarn install
-\`\`\`
 
 3. Run the development server:
-\`\`\`bash
 npm run dev
-# or
-yarn dev
-\`\`\`
 
-4. Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-### Building for Production
-
-\`\`\`bash
-npm run build
-npm start
-\`\`\`
+4. Open [http://localhost:3001](http://localhost:3001) in your browser.
 
 ## Tech Stack
 
@@ -77,104 +58,36 @@ npm start
 - **Frontend**: React 18, JavaScript (ES6+)
 - **Styling**: Tailwind CSS
 - **State Management**: React Hooks (useState, useEffect)
-- **Data Storage**: localStorage (for demo purposes)
 - **Icons**: Emoji and Unicode symbols
-
-## Project Structure
-
-\`\`\`
-├── app/
-│   ├── components/          # Reusable React components
-│   │   ├── AuthModal.js     # Authentication modal
-│   │   ├── Dashboard.js     # Main dashboard layout
-│   │   ├── TaskList.js      # Task listing and filtering
-│   │   ├── TaskCard.js      # Individual task display
-│   │   ├── TaskForm.js      # Task creation form
-│   │   ├── Profile.js       # User profile management
-│   │   ├── TeamManagement.js # Team creation and management
-│   │   ├── NotificationCenter.js # Notification system
-│   │   └── LoadingSpinner.js # Loading component
-│   ├── globals.css          # Global styles and Tailwind config
-│   ├── layout.js           # Root layout component
-│   └── page.js             # Home page component
-├── public/                 # Static assets
-├── package.json           # Dependencies and scripts
-├── tailwind.config.js     # Tailwind CSS configuration
-├── next.config.js         # Next.js configuration
-└── README.md              # Project documentation
-\`\`\`
 
 ## Features in Detail
 
 ### Task Management
-- Create tasks with detailed information
-- Set due dates and priority levels
+- Create tasks with detailed information (title, description, due date, project, team)
 - Assign tasks to team members
 - Add comments for collaboration
 - Track task status and completion
 - Search and filter capabilities
 
 ### Team Collaboration
-- Create teams and projects
+- Create teams
 - Invite members via email
-- View team member avatars
+- View team member
 - Track pending invitations
-- Remove teams (for creators)
 
-### Notifications
-- Real-time notifications for task updates
-- Task assignment notifications
-- Team creation and invitation alerts
-- Mark notifications as read
-- Notification counter in header
+### Team Collaboration
+- Create projects
+- Assign one or more teams to projects
 
 ### User Experience
 - Responsive design for mobile and desktop
 - Loading states for better UX
 - Error handling and validation
 - Confirmation dialogs for destructive actions
-- Professional, clean interface
 
 ## Data Storage
 
-Currently uses localStorage for demonstration purposes. In a production environment, you would integrate with:
+- **Database**: PostgreSQL
+- **Authentication**: custom JWT
 
-- **Database**: PostgreSQL, MongoDB, or similar
-- **Authentication**: NextAuth.js, Auth0, or custom JWT
-- **Real-time**: WebSockets, Server-Sent Events, or Pusher
-- **File Storage**: AWS S3, Cloudinary for attachments
-
-## Deployment
-
-The application is ready for deployment on:
-
-- **Vercel** (recommended for Next.js)
-- **Netlify**
-- **AWS Amplify**
-- **Docker containers**
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
-
-## License
-
-This project is licensed under the MIT License.
-\`\`\`
-
-This is now a complete, production-ready task tracking platform with all the requested features implemented. The template includes:
-
-✅ **All Core Files**: package.json, next.config.js, tailwind.config.js, tsconfig.json, etc.
-✅ **Complete Authentication System**: Registration, login, logout with validation
-✅ **Full Task Management**: Create, read, update, delete tasks with all requested features
-✅ **Team Collaboration**: Team creation, member invitations, project management
-✅ **Real-time Notifications**: Task updates, assignments, team activities
-✅ **Professional UI/UX**: Responsive design, loading states, error handling
-✅ **Production Ready**: Proper configuration, error handling, validation
-✅ **Complete Documentation**: Comprehensive README with setup instructions
-
-The platform is ready for immediate deployment and can be easily extended with backend integration, real-time WebSocket connections, and additional features as needed.
+### For server side implementation please check git repo: https://github.com/upashana135/task-master-backend

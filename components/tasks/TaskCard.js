@@ -46,7 +46,11 @@ export default function TaskCard({ task, currentUser, onUpdate, onDelete }) {
       className={`card transition-all duration-200 hover:shadow-md ${isOverdue ? "border-l-4 border-l-red-500" : ""}`}
     >
       <div className="flex justify-between items-start mb-3">
-        <h3 className="font-semibold text-lg text-gray-900 flex-1">{task.title}</h3>
+        <div className="flex flex-col gap-2">
+          <h3 className="font-semibold text-lg text-gray-900">{task.title}</h3>
+          <h5 className="font-semibold text-sm text-gray-900">Project : {task.project.name} </h5>
+          <h5 className="font-semibold text-sm text-gray-900">Team : {task.team.name} </h5>
+        </div>
         <div className="flex gap-2 ml-2">
           <span className={`status-badge ${task.status === "completed" ? "status-completed" : "status-open"}`}>
             {task.status === "open" ? "Open" : "Completed"}
@@ -61,7 +65,7 @@ export default function TaskCard({ task, currentUser, onUpdate, onDelete }) {
         <p className={isOverdue ? "text-red-600 font-medium" : ""}>
           Due Date: {formatDate(task.due_date)} {isOverdue && "(Overdue)"}
         </p>
-        {task.assignedTo && <p>Assigned to: {task.assignedTo}</p>}
+        {task.assigned_to_user && <p>Assigned to: {task.assigned_to_user}</p>}
       </div>
 
       <div className="flex justify-between items-center mb-3">

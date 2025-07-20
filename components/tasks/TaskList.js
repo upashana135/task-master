@@ -3,18 +3,20 @@
 import { useState } from "react"
 import TaskCard from "../../components/tasks/TaskCard"
 
-export default function TaskList({ tasks, currentUser, onUpdateTask, onDeleteTask }) {
+export default function TaskList({ tasks, currentUser, onUpdateTask, onDeleteTask, projects }) {
   const [filter, setFilter] = useState("all")
+  const [selectedProject, setSelectedProject] = useState("all")
   const [searchTerm, setSearchTerm] = useState("")
   const [sortBy, setSortBy] = useState("start_date")
 
   const filteredTasks = tasks
     .filter((task) => {
       const matchesFilter = filter === "all" || task.status === filter
+      const matchesProject = selectedProject === "all" || task.project_id === selectedProject
       const matchesSearch =
         task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         task.description.toLowerCase().includes(searchTerm.toLowerCase())
-      return matchesFilter && matchesSearch
+      return matchesProject && matchesFilter && matchesSearch
     })
     .sort((a, b) => {
       switch (sortBy) {
@@ -94,10 +96,18 @@ export default function TaskList({ tasks, currentUser, onUpdateTask, onDeleteTas
             onChange={(e) => setSearchTerm(e.target.value)}
           />
 
+          <select className="input-field w-auto" value={selectedProject} onChange={(e) => setSelectedProject(e.target.value)}>
+            <option value="all">-Select Project-</option>
+            {projects.map((project) => (
+              <option key={project.id} value={project.id}>
+                {project.name}
+              </option>
+            ))}
+          </select>
+
           <select className="input-field w-auto" value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
             <option value="start_date">Sort by Start Date</option>
             <option value="due_date">Sort by Due Date</option>
-            <option value="priority">Sort by Priority</option>
             <option value="title">Sort by Title</option>
           </select>
         </div>

@@ -24,12 +24,10 @@ export default function Dashboard() {
   }
 
   useEffect(() => {
-    // Load data from localStorage
     try {
       const savedNotifications = JSON.parse(localStorage.getItem("notifications") || "[]")
 
       getTask()
-      // setTeams(savedTeams)
       setNotifications(savedNotifications)
     } catch (error) {
       console.error("Error loading data:", error)
@@ -81,7 +79,7 @@ export default function Dashboard() {
                 + New Task
               </button>
             </div>
-            <TaskList tasks={tasks} currentUser={user} onUpdateTask={updateTask} onDeleteTask={deleteTask} />
+            <TaskList tasks={tasks} currentUser={user} onUpdateTask={updateTask} onDeleteTask={deleteTask} projects={projects}/>
           </div>
       </main>
 

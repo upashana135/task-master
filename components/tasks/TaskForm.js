@@ -67,7 +67,7 @@ export default function TaskForm({ onClose, onSubmit, projects, currentUser }) {
           } 
         })
         .catch((err) => {
-          
+          toast.error(err.response.data.message)
         })
         .finally(() => setLoading(false));
     } catch (error) {
@@ -102,7 +102,7 @@ export default function TaskForm({ onClose, onSubmit, projects, currentUser }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Description * </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Description </label>
             <textarea rows={3} className="input-field" value={formData.description} disabled={loading} placeholder="Describe the task..."
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
             />
@@ -120,7 +120,7 @@ export default function TaskForm({ onClose, onSubmit, projects, currentUser }) {
           {projects.length > 0 && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Project *</label>
-              <select className="input-field" value={formData.projectId} disabled={loading}
+              <select className="input-field" required value={formData.projectId} disabled={loading}
                 onChange={(e) => {onProjectChange(e.target.value); setFormData({ ...formData, projectId: e.target.value }); }}
               >
                 <option value="">Select a project</option>
@@ -136,7 +136,7 @@ export default function TaskForm({ onClose, onSubmit, projects, currentUser }) {
           {teams.length > 0 && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Team *</label>
-              <select className="input-field" value={formData.teamId} disabled={loading}
+              <select className="input-field" required value={formData.teamId} disabled={loading}
                 onChange={(e) => {setFormData({ ...formData, teamId: e.target.value }); getTeamMember(e.target.value)}}
               >
                 <option value="">Select a team</option>
