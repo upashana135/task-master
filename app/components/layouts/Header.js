@@ -83,7 +83,7 @@ export default function Header(){
 
             <div className="flex items-center space-x-4">
               {/* Notifications */}
-              <div className="relative">
+              {/* <div className="relative">
                 <button onClick={() => setShowNotifications(!showNotifications)}
                   className="relative p-2 text-gray-500 hover:text-gray-700 transition-colors"
                 >
@@ -109,7 +109,7 @@ export default function Header(){
                     onClose={() => setShowNotifications(false)}
                   />
                 )}
-              </div>
+              </div> */}
 
              
               {/* <img
