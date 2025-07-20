@@ -89,3 +89,5 @@ npm run dev
 
 - **Database**: PostgreSQL
 - **Authentication**: custom JWT
+
+### For server side implementation please check git repo: https://github.com/upashana135/task-master-backend
