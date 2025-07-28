@@ -1,13 +1,15 @@
 "use client"
 
 import httpRequest from "@/lib/axiosInstance"
+import { Paperclip, PillIcon } from "lucide-react"
 import { useState } from "react"
 import { toast } from "react-toastify"
 
-export default function TaskCard({ task, currentUser, onUpdate, onDelete }) {
+export default function TaskCard({ task, currentUser, onUpdate, onDelete, onCommented }) {
   const [showComments, setShowComments] = useState(false)
   const [newComment, setNewComment] = useState("")
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [attachments, setAttachments] = useState([])
 
   const toggleComplete = () => {
     onUpdate(task.id, {
@@ -22,13 +24,26 @@ export default function TaskCard({ task, currentUser, onUpdate, onDelete }) {
         commentText: newComment,
         commentDate: new Date().toISOString(),
       }
-      httpRequest.post(`/tasks/comments/${taskId}`, comment)
+      const formData = new FormData();
+      formData.append('comment', JSON.stringify(comment));
+      attachments.forEach(file => {
+        formData.append('file', file);
+      });
+
+      httpRequest.post(`/tasks/${taskId}/comments`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        })
         .then((res)=>{
           if(res.data.success) {
             toast.success(res.data.message)
             setNewComment("")
+            setAttachments([])
+
           }
         })
+        onCommented()
       // onUpdate(task.id, {
       //   comments: [...task.comments, comment],
       // })
@@ -110,24 +125,59 @@ export default function TaskCard({ task, currentUser, onUpdate, onDelete }) {
                     <span className="text-xs text-gray-500">{formatDate(comment.comment_date)}</span>
                   </div>
                   <p className="text-gray-700">{comment.comment_text}</p>
+                  {
+                    comment.attachments && comment.attachments.length > 0 ? (
+                      <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                        {comment.attachments.map((attachment, index) => (
+                          <a key={index} href={attachment.file_url} target="_blank" rel="noopener noreferrer">
+                            <PillIcon />
+                          </a>
+                        ))}
+                      </div>
+                    ) : null
+                  }
+                  
                 </div>
               ))
             )}
           </div>
         </div>
       )}
-      <div className="flex gap-2">
-            <input
-              type="text"
-              placeholder="Add a comment..."
-              className="input-field flex-1 text-sm"
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-            />
-            <button onClick={() => addComment(task.id)} className="btn-primary text-sm px-3 py-1" disabled={!newComment.trim()}>
-              Add
-            </button>
-          </div>
+      <div className="relative w-full flex items-center gap-2">
+        <input type="text" placeholder="Add a comment..." className="input-field flex-1 text-sm" value={newComment}
+          onChange={(e) => setNewComment(e.target.value)}
+        />
+        <label htmlFor="file-upload" className="absolute right-16 cursor-pointer">
+          <Paperclip className="text-gray-500 hover:text-indigo-600 w-4 h-4" title="Add attachment" />
+        </label>
+        <input id="file-upload" type="file" className="hidden" multiple
+          onChange={(e) => {
+            const files = Array.from(e.target.files);
+            setAttachments((prev) => [...prev, ...files]);
+          }}
+        />
+        <button onClick={() => addComment(task.id)} className="btn-primary text-sm px-3 py-1" disabled={!newComment.trim()}>
+          Add
+        </button>
+      </div>
+      {attachments.length > 0 && (
+        <div className="mt-2 flex flex-wrap gap-2">
+          {attachments.map((file, index) => (
+            <div key={index} className="text-sm text-gray-600 flex items-center gap-1 bg-gray-100 px-2 py-1 rounded">
+              <span>{file.name}</span>
+              <button
+                onClick={() =>
+                  setAttachments((prev) => prev.filter((_, i) => i !== index))
+                }
+                className="text-red-500 hover:text-red-700"
+                title="Remove"
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
 
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">

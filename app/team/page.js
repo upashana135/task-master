@@ -5,7 +5,10 @@ import Header from "../components/layouts/Header"
 import httpRequest from "@/lib/axiosInstance"
 import { toast } from "react-toastify"
 import { useAuth } from "../components/context/AuthContext"
-import { Mails, Users, Users2 } from "lucide-react"
+import { Mails, Users, UsersIcon } from "lucide-react"
+import Skeleton from 'react-loading-skeleton'
+import 'react-loading-skeleton/dist/skeleton.css'
+import Pagination from "@/components/helper/pagination"
 
 export default function TeamManagement({ onNotification }) {
   const {user} = useAuth()
@@ -16,21 +19,37 @@ export default function TeamManagement({ onNotification }) {
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [newTeam, setNewTeam] = useState({ name: "", description: "" })
   const [inviteEmail, setInviteEmail] = useState({})
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [teamType, setTeamType] = useState("owned")
 
   useEffect(()=>{
-    getTeams()
-    // getUsers()
-  }, [])
+    getTeams(currentPage, teamType)
+  }, [currentPage, teamType])
 
-  const getTeams = () => {
-    httpRequest.get("/teams")
-    .then((res)=>{
-      if(res.data.success) {
-        setTeams(res.data.data)
-        console.log(res.data.data)
-      }
-    })
+  const getTeams = (page = 1, type='owned') => {
+    setLoading(true)
+    try{
+      httpRequest.get(`/teams?page=${page}&limit=6`)
+      .then((res)=>{
+        if(res.data.success) {
+          setTeams(res.data.data)
+          setCurrentPage(res.data.data.pagination.currentPage)
+          if(type === 'owned'){
+            setTotalPages(res.data.data.pagination.totalTeamPages)
+          }else{
+            setTotalPages(res.data.data.pagination.totalInvitedTeamPages)
+          }
+          setLoading(false)
+        }
+      })
+      .catch((err)=>{
+        setLoading(false)
+      })
+    }catch (error) {
+      console.error("Error creating team:", error)
+    }
   }
 
   const createTeam = async (e) => {
@@ -115,186 +134,207 @@ export default function TeamManagement({ onNotification }) {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header/>
-
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-3xl font-bold text-gray-900">Owned Teams</h2>
+        <h2 className="text-3xl font-bold text-gray-900">Teams</h2>
+        <select className="input-field w-auto" value={teamType} onChange={(e) => {setTeamType(e.target.value); getTeams(currentPage, e.target.value)}}>
+            <option value="owned">Owned Teams</option>
+            <option value="collaborated">Collaborating Teams</option>
+        </select>
         <button onClick={() => setShowCreateForm(true)} className="btn-primary">
           + Create Team
         </button>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {teams.teamWithUsers && teams.teamWithUsers.map((team) => (
-          <div key={team.id} className="card hover:shadow-lg transition-shadow">
-            <div className="flex justify-between items-start mb-3">
-              <h3 className="text-xl font-semibold">{team.name}</h3>
-              {/* {Number(team.created_by) === user.userId && (
-                <button onClick={() => removeTeam(team.id)} className="text-red-500 hover:text-red-700 text-sm">
-                  Remove
-                </button>
-              )} */}
-            </div>
-
-            <p className="text-gray-600 mb-4">{team.description}</p>
-              
-            <button
-              onClick={() => setShowMembers(showMembers === team.id ? null : team.id)}
-              className="flex items-center gap-2 text-blue-600 hover:text-blue-800 text-sm transition-colors"
-            >
-            <Users/> Team Members ({team.teamMembers.length})
-            </button>
-
-            {showMembers === team.id && (
-                <div className="border-t pt-4">
-                  <div className="space-y-3 mb-3 max-h-32 overflow-y-auto">
-                    {team.teamMembers.length === 0 ? (
-                      <p className="text-gray-500 text-sm">No members yet</p>
-                    ) : (
-                      team.teamMembers.map((member) => (
-                        <div key={member.id} className="text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded">
-                          <div className="flex justify-between items-start mb-1">
-                            <span className="font-medium text-gray-900">{member.member_email}</span>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
-            )}
-            {/* {team.teamMembers && team.teamMembers.length > 0 && (
-            <div className="mb-4">
-              <h4 className="font-medium mb-2">Members ({team.teamMembers.length})</h4>
-              <div className="flex -space-x-2 mb-2">
-                {team.teamMembers.slice(0, 5).map((member, index) => (
-                  <img
-                    key={index}
-                    src={member.avatar || "/placeholder.svg?height=32&width=32"}
-                    alt={member.name}
-                    className="w-8 h-8 rounded-full border-2 border-white"
-                    title={member.name}
-                  /> {member.member_email}
-                ))}
-                {team.teamMembers.length > 5 && (
-                  <div className="w-8 h-8 rounded-full bg-gray-300 border-2 border-white flex items-center justify-center text-xs">
-                    +{team.teamMembers.length - 5}
-                  </div>
-                )}
+      {teamType==='owned' ? 
+        <>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {loading && [1,2,3].map((index)=>(
+              <div key={index} className="card hover:shadow-lg transition-shadow">
+                <Skeleton height={30} width={'50%'}/>
+                <Skeleton className="mt-3" height={10} width={'100%'}/>
+                <Skeleton className="mt-3" height={100} width={'100%'}/>
+                <Skeleton className="mt-3" height={10} width={'40%'}/>
               </div>
-            </div>
-            )} */}
-
-            <button
-              onClick={() => setShowInvitedMembers(showInvitedMembers === team.id ? null : team.id)}
-              className="flex items-center gap-2 text-blue-600 hover:text-blue-800 text-sm transition-colors"
-            >
-            <Mails/> Pending Invitations ({team.invitedMembers.length})
-            </button>
-
-            {showInvitedMembers === team.id && (
-                <div className="border-t pt-4">
-                  <div className="space-y-3 mb-3 max-h-32 overflow-y-auto">
-                    {team.invitedMembers.length === 0 ? (
-                      <p className="text-gray-500 text-sm">No invitations yet</p>
-                    ) : (
-                      team.invitedMembers.map((member) => (
-                        <div key={member.id} className="text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded">
-                          <div className="flex justify-between items-start mb-1">
-                            <span className="font-medium text-gray-900">{member.member_email}</span>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
+            ))}
+            {!loading && teams.teamWithUsers && teams.teamWithUsers.map((team) => (
+              <div key={team.id} className="card hover:shadow-lg transition-shadow">
+                <div className="flex justify-between items-start mb-3">
+                  <h3 className="text-xl font-semibold">{team.name}</h3>
+                  {/* {Number(team.created_by) === user.userId && (
+                    <button onClick={() => removeTeam(team.id)} className="text-red-500 hover:text-red-700 text-sm">
+                      Remove
+                    </button>
+                  )} */}
                 </div>
-            )}
 
-            <div className="flex mt-3 gap-2">
-              <select className="input-field" value={inviteEmail[team.id] || ""} disabled={loading}
-                onChange={(e) => handleInviteEmailChange(team.id, e.target.value)}
-              >
-                <option value="" disabled>--select email--</option>
-                {team.notInvitedUsers && team.notInvitedUsers.map((user) => (
-                  <option key={user.id} value={user.email}>
-                    {user.name} ({user.email})
-                  </option>
-                ))}
-              </select>
-              <button onClick={() => inviteMember(team.id)} className="btn-primary text-sm px-3 py-1"
-                disabled={!inviteEmail[team.id]}
-              >
-                Invite
-              </button>
-            </div>
+                <p className="text-gray-600 mb-4">{team.description}</p>
+                  
+                <button
+                  onClick={() => setShowMembers(showMembers === team.id ? null : team.id)}
+                  className="flex items-center gap-2 text-blue-600 hover:text-blue-800 text-sm transition-colors"
+                >
+                <Users/> Team Members ({team.teamMembers.length})
+                </button>
 
-            <div className="mt-3 text-xs text-gray-500">Created {new Date(team.created_at).toLocaleDateString()}</div>
-          </div>
-        ))}
-      </div>
+                {showMembers === team.id && (
+                    <div className="border-t pt-4">
+                      <div className="space-y-3 mb-3 max-h-32 overflow-y-auto">
+                        {team.teamMembers.length === 0 ? (
+                          <p className="text-gray-500 text-sm">No members yet</p>
+                        ) : (
+                          team.teamMembers.map((member) => (
+                            <div key={member.id} className="text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded">
+                              <div className="flex justify-between items-start mb-1">
+                                <span className="font-medium text-gray-900">{member.member_email}</span>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                )}
 
-      <div className="flex justify-between items-center mb-6 mt-6">
-        <h2 className="text-3xl font-bold text-gray-900">Collaborating Teams</h2>
-      </div>
+                <button
+                  onClick={() => setShowInvitedMembers(showInvitedMembers === team.id ? null : team.id)}
+                  className="flex items-center gap-2 text-blue-600 hover:text-blue-800 text-sm transition-colors"
+                >
+                <Mails/> Pending Invitations ({team.invitedMembers.length})
+                </button>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {teams.invitedTeams && teams.invitedTeams.map((team) => (
-          <div key={team.id} className="card hover:shadow-lg transition-shadow">
-            <div className="flex justify-between items-start mb-3">
-              <h3 className="text-xl font-semibold">{team.name}</h3>
-              {team.currentUserInvitationStatus === 'invited' && (
-                <>
-                  <button onClick={() => memberInvitationStatus(team.member_id, 'accepted')} className="text-green-500 hover:text-green-700 text-sm">
-                    Accept
+                {showInvitedMembers === team.id && (
+                    <div className="border-t pt-4">
+                      <div className="space-y-3 mb-3 max-h-32 overflow-y-auto">
+                        {team.invitedMembers.length === 0 ? (
+                          <p className="text-gray-500 text-sm">No invitations yet</p>
+                        ) : (
+                          team.invitedMembers.map((member) => (
+                            <div key={member.id} className="text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded">
+                              <div className="flex justify-between items-start mb-1">
+                                <span className="font-medium text-gray-900">{member.member_email}</span>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                )}
+
+                <div className="flex mt-3 gap-2">
+                  <select className="input-field" value={inviteEmail[team.id] || ""} disabled={loading}
+                    onChange={(e) => handleInviteEmailChange(team.id, e.target.value)}
+                  >
+                    <option value="" disabled>--select email--</option>
+                    {team.notInvitedUsers && team.notInvitedUsers.map((user) => (
+                      <option key={user.id} value={user.email}>
+                        {user.name} ({user.email})
+                      </option>
+                    ))}
+                  </select>
+                  <button onClick={() => inviteMember(team.id)} className="btn-primary text-sm px-3 py-1"
+                    disabled={!inviteEmail[team.id]}
+                  >
+                    Invite
                   </button>
-                  <button onClick={() => memberInvitationStatus(team.member_id, 'rejected')} className="text-red-500 hover:text-red-700 text-sm">
-                    Reject
-                  </button>
-                </>
-              )}
-            </div>
-
-            <p className="text-gray-600 mb-4">{team.description}</p>
-
-            <button
-              onClick={() => setShowAcceptedMembers(showAcceptedMembers === team.id ? null : team.id)}
-              className="flex items-center gap-2 text-blue-600 hover:text-blue-800 text-sm transition-colors"
-            >
-            <Users/> Members ({team.acceptedMembers.length})
-            </button>
-
-            {showAcceptedMembers === team.id && (
-                <div className="border-t pt-4">
-                  <div className="space-y-3 mb-3 max-h-32 overflow-y-auto">
-                    {team.acceptedMembers.length === 0 ? (
-                      <p className="text-gray-500 text-sm">No members yet</p>
-                    ) : (
-                      team.acceptedMembers.map((member) => (
-                        <div key={member.id} className="text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded">
-                          <div className="flex justify-between items-start mb-1">
-                            <span className="font-medium text-gray-900">{member.email}</span>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
                 </div>
-            )}
 
-            <div className="mt-3 text-xs text-gray-500">Created {new Date(team.created_at).toLocaleDateString()}</div>
-
-            <div className="mt-3 text-xs text-gray-500">Created By : { team.created_by }</div>
+                <div className="mt-3 text-xs text-gray-500">Created {new Date(team.created_at).toLocaleDateString()}</div>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
 
-      {teams && teams.length === 0 && (
-        <div className="text-center py-12">
-          <div className="text-gray-400 text-6xl mb-4">👥</div>
-          <p className="text-gray-500 text-lg">No teams created yet</p>
-          <p className="text-gray-400 text-sm">Create your first team to start collaborating</p>
-        </div>
-      )}
+          {!loading && teams.teamWithUsers && teams.teamWithUsers.length === 0 && (
+            <div className="text-center py-12">
+              <div className="text-gray-400 mb-4 flex justify-center">
+                <UsersIcon size={64}/>
+              </div>
+              <p className="text-gray-500 text-lg">No team created yet</p>
+              <p className="text-gray-400 text-sm">Create your first team to start collaborating</p>
+            </div>
+          )}
+
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        </>
+      :
+        <>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {loading && [1,2,3].map((index)=>(
+              <div key={index} className="card hover:shadow-lg transition-shadow">
+                <Skeleton height={30} width={'50%'}/>
+                <Skeleton className="mt-3" height={100} width={'100%'}/>
+              </div>
+            ))}
+            {!loading && teams.invitedTeams && teams.invitedTeams.map((team) => (
+              <div key={team.id} className="card hover:shadow-lg transition-shadow">
+                <div className="flex justify-between items-start mb-3">
+                  <h3 className="text-xl font-semibold">{team.name}</h3>
+                  {team.currentUserInvitationStatus === 'invited' && (
+                    <>
+                      <button onClick={() => memberInvitationStatus(team.member_id, 'accepted')} className="text-green-500 hover:text-green-700 text-sm">
+                        Accept
+                      </button>
+                      <button onClick={() => memberInvitationStatus(team.member_id, 'rejected')} className="text-red-500 hover:text-red-700 text-sm">
+                        Reject
+                      </button>
+                    </>
+                  )}
+                </div>
+
+                <p className="text-gray-600 mb-4">{team.description}</p>
+
+                <button
+                  onClick={() => setShowAcceptedMembers(showAcceptedMembers === team.id ? null : team.id)}
+                  className="flex items-center gap-2 text-blue-600 hover:text-blue-800 text-sm transition-colors"
+                >
+                <Users/> Members ({team.acceptedMembers.length})
+                </button>
+
+                {showAcceptedMembers === team.id && (
+                    <div className="border-t pt-4">
+                      <div className="space-y-3 mb-3 max-h-32 overflow-y-auto">
+                        {team.acceptedMembers.length === 0 ? (
+                          <p className="text-gray-500 text-sm">No members yet</p>
+                        ) : (
+                          team.acceptedMembers.map((member) => (
+                            <div key={member.id} className="text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded">
+                              <div className="flex justify-between items-start mb-1">
+                                <span className="font-medium text-gray-900">{member.email}</span>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                )}
+
+                <div className="mt-3 text-xs text-gray-500">Created {new Date(team.created_at).toLocaleDateString()}</div>
+
+                <div className="mt-3 text-xs text-gray-500">Created By : { team.created_by }</div>
+              </div>
+            ))}
+          </div>
+
+          {!loading && teams && teams.length === 0 && (
+            <div className="text-center py-12">
+              <div className="text-gray-400 mb-4 flex justify-center">
+                <UsersIcon size={64}/>
+              </div>
+              <p className="text-gray-500 text-lg">No teams collaborated yet</p>
+            </div>
+          )}
+
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        </>
+      }
 
       {showCreateForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
