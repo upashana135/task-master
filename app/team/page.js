@@ -8,7 +8,7 @@ import { useAuth } from "../components/context/AuthContext"
 import { Mails, Users, UsersIcon } from "lucide-react"
 import Skeleton from 'react-loading-skeleton'
 import 'react-loading-skeleton/dist/skeleton.css'
-import Pagination from "@/components/helper/pagination"
+import Pagination from "@/components/helper/Pagination"
 
 export default function TeamManagement({ onNotification }) {
   const {user} = useAuth()

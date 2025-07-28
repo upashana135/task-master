@@ -8,7 +8,7 @@ import { useAuth } from "../components/context/AuthContext"
 import httpRequest from "@/lib/axiosInstance"
 import { toast } from "react-toastify"
 import { useRouter } from "next/navigation"
-import Pagination from "@/components/helper/pagination"
+import Pagination from "@/components/helper/Pagination"
 
 export default function Dashboard() {
   const {user} = useAuth();
