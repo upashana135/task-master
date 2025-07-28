@@ -7,32 +7,48 @@ import TaskList from "../../components/tasks/TaskList"
 import { useAuth } from "../components/context/AuthContext"
 import httpRequest from "@/lib/axiosInstance"
 import { toast } from "react-toastify"
+import { useRouter } from "next/navigation"
+import Pagination from "@/components/helper/pagination"
 
 export default function Dashboard() {
   const {user} = useAuth();
+  const router = useRouter()
   const [tasks, setTasks] = useState([])
   const [projects, setProjects] = useState([])
-  const [notifications, setNotifications] = useState([])
+  // const [notifications, setNotifications] = useState([])
   const [showTaskForm, setShowTaskForm] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
 
-  const getTask = () => {
-    httpRequest.get('/tasks')
-    .then((res)=>{
-        setTasks(res.data.data.tasks)
-        setProjects(res.data.data.projects)
+  const getTask = (page = 1) => {
+    setLoading(true)
+    try{
+      httpRequest.get(`/tasks?page=${page}&limit=6`)
+      .then((res)=>{
+          setTasks(res.data.data.tasks)
+          setProjects(res.data.data.projects)
+          setTotalPages(res.data.data.pagination.totalPages)
+          setCurrentPage(res.data.data.pagination.currentPage)
+          setLoading(false)
+        })
+      .catch((err)=>{
+        setLoading(false)
       })
+    }catch(err){
+      setLoading(false)
+    }
   }
 
   useEffect(() => {
     try {
-      const savedNotifications = JSON.parse(localStorage.getItem("notifications") || "[]")
-
-      getTask()
-      setNotifications(savedNotifications)
+      // const savedNotifications = JSON.parse(localStorage.getItem("notifications") || "[]")
+      getTask(currentPage)
+      // setNotifications(savedNotifications)
     } catch (error) {
       console.error("Error loading data:", error)
     }
-  }, [])
+  }, [currentPage])
 
   const addTaskSuccess = () => {
     getTask()
@@ -58,6 +74,10 @@ export default function Dashboard() {
       })
   }
 
+  const commentTask = () =>{
+    getTask()
+  }
+
   const deleteTask = (taskId) => {
     httpRequest.delete(`/tasks/${taskId}`)
       .then((res)=>{
@@ -79,8 +99,13 @@ export default function Dashboard() {
                 + New Task
               </button>
             </div>
-            <TaskList tasks={tasks} currentUser={user} onUpdateTask={updateTask} onDeleteTask={deleteTask} projects={projects}/>
+            <TaskList tasks={tasks} currentUser={user} onUpdateTask={updateTask} onDeleteTask={deleteTask} projects={projects} loading={loading} onTaskComment={commentTask}/>
           </div>
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
       </main>
 
       {showTaskForm && (

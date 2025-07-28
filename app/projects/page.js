@@ -5,7 +5,9 @@ import Header from "../components/layouts/Header"
 import httpRequest from "@/lib/axiosInstance"
 import { toast } from "react-toastify"
 import Select from 'react-select'
-import { Users } from "lucide-react"
+import { BookCopy, Users } from "lucide-react"
+import Skeleton from 'react-loading-skeleton'
+import 'react-loading-skeleton/dist/skeleton.css'
 
 export default function ProjectManagement({ onNotification }) {
   const [teams, setTeams] = useState([])
@@ -16,21 +18,30 @@ export default function ProjectManagement({ onNotification }) {
   const [selectedTeams, setSelectedTeams] = useState([])
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [newProject, setNewProject] = useState({ name: "", description: "" })
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
 
   const getProjects = () => {
-    httpRequest.get("/projects")
-    .then((res)=>{
-      if(res.data.success) {
-        setProjects(res.data.data.projects)
-        setCollaboratingProjects(res.data.data.collaboratingProjects)
-        const options = res.data.data.teams.map((team) => ({
-          value: team.id,
-          label: team.name,
-        }))
-        setTeams(options)
-      }
-    })
+    try{
+      httpRequest.get("/projects")
+      .then((res)=>{
+        if(res.data.success) {
+          setProjects(res.data.data.projects)
+          setCollaboratingProjects(res.data.data.collaboratingProjects)
+          const options = res.data.data.teams.map((team) => ({
+            value: team.id,
+            label: team.name,
+          }))
+          setTeams(options)
+          setLoading(false)
+        }
+      })
+      .catch((error) => {
+        setLoading(false)
+      })
+    }
+    catch (error) {
+      console.error("Something went wrong!")
+    }
   }
 
   useEffect(()=>{
@@ -79,6 +90,14 @@ export default function ProjectManagement({ onNotification }) {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {loading && [1,2,3].map((index)=>(
+          <div key={index} className="card hover:shadow-lg transition-shadow">
+            <Skeleton height={30} width={'50%'}/>
+            <Skeleton className="mt-3" height={10} width={'100%'}/>
+            <Skeleton className="mt-3" height={100} width={'100%'}/>
+            <Skeleton className="mt-3" height={10} width={'40%'}/>
+          </div>
+        ))}
         {projects && projects.map((project) => (
           <div key={project.id} className="card hover:shadow-lg transition-shadow">
             <div className="flex justify-between items-start mb-3">
@@ -120,9 +139,11 @@ export default function ProjectManagement({ onNotification }) {
         ))}
       </div>
 
-      {projects && projects.length === 0 && (
+      {!loading && projects && projects.length === 0 && (
         <div className="text-center py-12">
-          <div className="text-gray-400 text-6xl mb-4">👥</div>
+          <div className="text-gray-400 mb-4 flex justify-center">
+            <BookCopy size={64}/>
+          </div>
           <p className="text-gray-500 text-lg">No projects created yet</p>
           <p className="text-gray-400 text-sm">Create your first project to start collaborating</p>
         </div>
@@ -189,11 +210,19 @@ export default function ProjectManagement({ onNotification }) {
       </div>
 
       <div>
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-6 mt-6">
         <h2 className="text-3xl font-bold text-gray-900">Collaborating Projects</h2>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {loading && [1,2,3].map((index)=>(
+          <div key={index} className="card hover:shadow-lg transition-shadow">
+            <Skeleton height={30} width={'50%'}/>
+            <Skeleton className="mt-3" height={10} width={'100%'}/>
+            <Skeleton className="mt-3" height={100} width={'100%'}/>
+            <Skeleton className="mt-3" height={10} width={'40%'}/>
+          </div>
+        ))}
         {collaboratingProjects && collaboratingProjects.map((project) => (
           <div key={project.id} className="card hover:shadow-lg transition-shadow">
             <div className="flex justify-between items-start mb-3">
@@ -235,9 +264,11 @@ export default function ProjectManagement({ onNotification }) {
         ))}
       </div>
 
-      {collaboratingProjects && collaboratingProjects.length === 0 && (
+      {!loading && collaboratingProjects && collaboratingProjects.length === 0 && (
         <div className="text-center py-12">
-          <div className="text-gray-400 text-6xl mb-4">👥</div>
+          <div className="text-gray-400 mb-4 flex justify-center">
+            <BookCopy size={64}/>
+          </div>
           <p className="text-gray-500 text-lg">No projects collaborated yet</p>
         </div>
       )}

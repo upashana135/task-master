@@ -2,8 +2,12 @@
 
 import { useState } from "react"
 import TaskCard from "../../components/tasks/TaskCard"
+import Skeleton from 'react-loading-skeleton'
+import 'react-loading-skeleton/dist/skeleton.css'
+import { ScrollText } from "lucide-react"
+import { useSearchParams } from "next/navigation"
 
-export default function TaskList({ tasks, currentUser, onUpdateTask, onDeleteTask, projects }) {
+export default function TaskList({ tasks, currentUser, onUpdateTask, onDeleteTask, projects, loading, onTaskComment}) {
   const [filter, setFilter] = useState("all")
   const [selectedProject, setSelectedProject] = useState("all")
   const [searchTerm, setSearchTerm] = useState("")
@@ -43,22 +47,32 @@ export default function TaskList({ tasks, currentUser, onUpdateTask, onDeleteTas
     <div>
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white p-4 rounded-lg border border-gray-200">
-          <div className="text-2xl font-bold text-gray-900">{taskStats.total}</div>
-          <div className="text-sm text-gray-600">Total Tasks</div>
-        </div>
-        <div className="bg-white p-4 rounded-lg border border-gray-200">
-          <div className="text-2xl font-bold text-yellow-600">{taskStats.open}</div>
-          <div className="text-sm text-gray-600">Open</div>
-        </div>
-        <div className="bg-white p-4 rounded-lg border border-gray-200">
-          <div className="text-2xl font-bold text-green-600">{taskStats.completed}</div>
-          <div className="text-sm text-gray-600">Completed</div>
-        </div>
-        <div className="bg-white p-4 rounded-lg border border-gray-200">
-          <div className="text-2xl font-bold text-red-600">{taskStats.overdue}</div>
-          <div className="text-sm text-gray-600">Overdue</div>
-        </div>
+        {loading && [1,2,3,4].map((index)=>(
+          <div key={index} className="card hover:shadow-lg transition-shadow">
+            <Skeleton height={30} width={'15%'}/>
+            <Skeleton className="mt-3" height={10} width={'40%'}/>
+          </div>
+        ))}
+        {!loading ? 
+          <>
+            <div className="bg-white p-4 rounded-lg border border-gray-200">
+              <div className="text-2xl font-bold text-gray-900">{taskStats.total}</div>
+              <div className="text-sm text-gray-600">Total Tasks</div>
+            </div>
+            <div className="bg-white p-4 rounded-lg border border-gray-200">
+              <div className="text-2xl font-bold text-yellow-600">{taskStats.open}</div>
+              <div className="text-sm text-gray-600">Open</div>
+            </div>
+            <div className="bg-white p-4 rounded-lg border border-gray-200">
+              <div className="text-2xl font-bold text-green-600">{taskStats.completed}</div>
+              <div className="text-sm text-gray-600">Completed</div>
+            </div>
+            <div className="bg-white p-4 rounded-lg border border-gray-200">
+              <div className="text-2xl font-bold text-red-600">{taskStats.overdue}</div>
+              <div className="text-sm text-gray-600">Overdue</div>
+            </div>
+          </> : <></>
+        }
       </div>
 
       {/* Filters and Search */}
@@ -115,22 +129,32 @@ export default function TaskList({ tasks, currentUser, onUpdateTask, onDeleteTas
 
       {/* Task Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {filteredTasks.map((task) => (
+        {loading && [1,2,3].map((index)=>(
+          <div key={index} className="card hover:shadow-lg transition-shadow">
+            <Skeleton height={30} width={'50%'}/>
+            <Skeleton className="mt-3" height={10} width={'100%'}/>
+            <Skeleton className="mt-3" height={100} width={'100%'}/>
+            <Skeleton className="mt-3" height={10} width={'40%'}/>
+          </div>
+        ))}
+        {!loading && filteredTasks.map((task) => (
           <TaskCard
             key={task.id}
             task={task}
             currentUser={currentUser}
             onUpdate={onUpdateTask}
             onDelete={onDeleteTask}
+            onCommented = {onTaskComment}
           />
         ))}
       </div>
 
-      {filteredTasks.length === 0 && (
+      {!loading && filteredTasks.length === 0 && (
         <div className="text-center py-12">
-          <div className="text-gray-400 text-6xl mb-4">📋</div>
+          <div className="text-gray-400 mb-4 flex justify-center">
+            <ScrollText size={64}/>
+          </div>
           <p className="text-gray-500 text-lg">No tasks found</p>
-          <p className="text-gray-400 text-sm">Try adjusting your search or filter criteria</p>
         </div>
       )}
     </div>
